@@ -19,7 +19,7 @@ import java.util.Map;
 
 @Parameters(commandDescription = "load mutations into database" )
 public class LoadMutationCmd implements TmbCmd {
-    @Parameter(names = "-i", description = "dir of studies to analyze, separate by ,")
+    @Parameter(names = {"-i", "--input"}, description = "dir of studies to analyze, separate by ,")
     //it should be the dir names of studies, separated by comma
     private String paths;
     @Parameter(names = {"-s", "--study"}, description =

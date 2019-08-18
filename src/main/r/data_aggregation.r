@@ -29,17 +29,18 @@ for (i in 2:13) {
         data_mutations_extended_path = paste(parent_dir, dataset_dir, 'data_mutations_extended.txt', sep = FILE_SEP)
         data_clinical_patient <- read.csv(data_clinical_patient_path, comment.char = '#', sep = '\t', header = TRUE)
         data_clinical_sample <- read.csv(data_clinical_sample_path, comment.char = '#', sep = '\t', header = TRUE)
-        data_mutations_mskcc <- read.csv(data_mutations_mskcc_path, comment.char = '#', sep = '\t', header = TRUE)
-        data_mutations_extended <- read.csv(data_mutations_extended_path, comment.char = '#', sep = '\t', header = TRUE)
         patient_sample_join <- data_clinical_patient %>%
             left_join(data_clinical_sample, by = c('PATIENT_ID'))
         patient_sample_join$study = i
         patient_sample = rbind.all.columns(patient_sample, patient_sample_join)
         
-        mutations_union = data_mutations_mskcc %>%
-            union(data_mutations_extended)
-        mutations_union$study = i
-        mutations = rbind.all.columns(mutations, mutations_union)
+        #data_mutations_mskcc <- read.csv(data_mutations_mskcc_path, comment.char = '#', sep = '\t', header = TRUE)
+        #data_mutations_extended <- read.csv(data_mutations_extended_path, comment.char = '#', sep = '\t', header = TRUE)
+        
+        #mutations_union = data_mutations_mskcc %>%
+        #    union(data_mutations_extended)
+        #mutations_union$study = i
+        #mutations = rbind.all.columns(mutations, mutations_union)
     }
 }
 

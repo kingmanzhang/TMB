@@ -1,5 +1,27 @@
 library(tidyverse)
 
+# define function to chose the non-NA value of two vectors of the same length. Use reduce to pass a function to handle two non-NA values
+non_na <- function(v1, v2, reduce=NA){
+    assertthat::are_equal(length(v1), length(v2))
+    if (is.na(reduce)){
+        reduce = function(x, ...) {return (x)}
+    }
+    N = length(v1)
+    v = vector(mode = "character", length = N)
+    for (i in 1:N){
+        if (!is.na(v1[i]) & is.na(v2[i])){
+            v[i] = v1[i]
+        } else if (is.na(v1[i]) & !is.na(v2[i])){
+            v[i] = v2[i]
+        } else if (!is.na(v1[i]) & !is.na(v2[i])){
+            v[i] = do.call(reduce, list(v1[i], v2[i]))
+        } else{
+            v[i] = NA
+        }
+    }
+    v
+}
+
 # define function to clean mutations for study 2
 clean_mutation_2 <- function(mskcc_path, extended_path){
     mutations_mskcc = read.csv(mskcc_path, comment.char = "#", header = TRUE, sep = "\t")
