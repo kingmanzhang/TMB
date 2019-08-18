@@ -1,3 +1,6 @@
+#do not track database for now
+src/main/resources/tmb.sqlite
+
 #java stuff
 *.idea/
 *.iml
