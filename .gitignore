@@ -1,5 +1,5 @@
 #do not track database for now
-src/main/resources/tmb.sqlite
+*.sqlite
 
 #java stuff
 *.idea/

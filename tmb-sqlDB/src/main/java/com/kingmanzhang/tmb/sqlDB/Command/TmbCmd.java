@@ -1,4 +1,4 @@
-package com.kingmanzhang.Command;
+package com.kingmanzhang.tmb.sqlDB.Command;
 
 public interface TmbCmd {
     void run();

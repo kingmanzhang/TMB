@@ -1,14 +1,12 @@
-package com.kingmanzhang;
+package com.kingmanzhang.tmb.sqlDB;
 
 import javax.sql.DataSource;
 
-import com.kingmanzhang.Command.LoadMutationCmd;
-import com.kingmanzhang.Command.LoadPatientSampleCmd;
-import com.kingmanzhang.Command.TmbCmd;
+import com.kingmanzhang.tmb.sqlDB.Command.LoadMutationCmd;
+import com.kingmanzhang.tmb.sqlDB.Command.LoadPatientSampleCmd;
+import com.kingmanzhang.tmb.sqlDB.Command.TmbCmd;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.beans.factory.annotation.Value;
 import org.springframework.boot.jdbc.DataSourceBuilder;
-import org.springframework.context.EnvironmentAware;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.core.env.Environment;
@@ -21,7 +19,7 @@ public class AppConfig {
 
     @Bean
     public String dbPath(Environment env){
-        return env.getProperty("spring.jpa.dabase.path");
+        return env.getProperty("spring.jpa.database.path");
     }
 
     @Bean

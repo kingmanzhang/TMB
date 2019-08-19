@@ -1,8 +1,8 @@
-package com.kingmanzhang;
+package com.kingmanzhang.tmb.sqlDB;
 
 import com.beust.jcommander.JCommander;
 import com.beust.jcommander.ParameterException;
-import com.kingmanzhang.Command.TmbCmd;
+import com.kingmanzhang.tmb.sqlDB.Command.TmbCmd;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.boot.CommandLineRunner;

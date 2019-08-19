@@ -1,4 +1,4 @@
-package com.kingmanzhang;
+package com.kingmanzhang.tmb.sqlDB;
 
 import static org.junit.Assert.assertTrue;
 

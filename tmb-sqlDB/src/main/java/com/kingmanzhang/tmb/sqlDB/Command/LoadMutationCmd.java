@@ -1,4 +1,4 @@
-package com.kingmanzhang.Command;
+package com.kingmanzhang.tmb.sqlDB.Command;
 
 import com.beust.jcommander.Parameter;
 import com.beust.jcommander.Parameters;

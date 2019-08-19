@@ -1,4 +1,4 @@
-package com.kingmanzhang;
+package com.kingmanzhang.tmb.sqlDB;
 
 import org.hibernate.dialect.Dialect;
 import org.hibernate.dialect.function.SQLFunctionTemplate;
