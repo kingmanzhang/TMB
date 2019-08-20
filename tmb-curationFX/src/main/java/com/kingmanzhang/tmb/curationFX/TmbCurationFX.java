@@ -1,8 +1,8 @@
 package com.kingmanzhang.tmb.curationFX;
 
 import com.kingmanzhang.tmb.curationFX.framework.Injector;
-import com.kingmanzhang.tmb.curationFX.gui.TmbCurationFXPresenter;
-import com.kingmanzhang.tmb.curationFX.gui.TmbCurationFXView;
+import com.kingmanzhang.tmb.curationFX.gui.main.TmbCurationFXPresenter;
+import com.kingmanzhang.tmb.curationFX.gui.main.TmbCurationFXView;
 import javafx.application.Application;
 import javafx.scene.Scene;
 import javafx.stage.Stage;
