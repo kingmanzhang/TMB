@@ -1,5 +1,9 @@
 library(tidyverse)
 
+excel_col_to_row_str <- function(x) {
+    str_c(str_split(x, '\n')[[1]], collapse="|")
+}
+
 # define function to chose the non-NA value of two vectors of the same length. Use reduce to pass a function to handle two non-NA values
 non_na <- function(v1, v2, reduce=NA){
     assertthat::are_equal(length(v1), length(v2))

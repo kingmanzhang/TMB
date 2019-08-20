@@ -4,13 +4,7 @@ import com.kingmanzhang.tmb.curationFX.framework.Injector;
 import com.kingmanzhang.tmb.curationFX.gui.TmbCurationFXPresenter;
 import com.kingmanzhang.tmb.curationFX.gui.TmbCurationFXView;
 import javafx.application.Application;
-import javafx.scene.Group;
-import javafx.scene.Node;
 import javafx.scene.Scene;
-import javafx.scene.layout.AnchorPane;
-import javafx.scene.layout.GridPane;
-import javafx.scene.layout.VBox;
-import javafx.scene.shape.Circle;
 import javafx.stage.Stage;
 
 public class TmbCurationFX extends Application {
