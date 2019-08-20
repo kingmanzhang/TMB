@@ -185,3 +185,39 @@ patient_sample_cleaned$stage_at.presentation <- gsub('b', 'B', patient_sample_cl
 
 write_csv(patient_sample_cleaned, "/Users/Aaron/git/TMB/tmb-sqlDB/src/main/r/tmb_melanoma/patient_sample_cleaned.csv")
 
+### continue
+# change assay methods
+
+data_laststudy <- read.csv(("/Users/Aaron/git/TMB/tmb-sqlDB/src/main/r/tmb_melanoma/dataset_assignment_sheet2.csv"), header = TRUE, sep = ",", stringsAsFactors = FALSE) 
+data_laststudy <- data_laststudy %>% filter(study_id == 'desm_broad_2015')
+patient_sample_cleaned <- patient_sample_cleaned %>% left_join(data_laststudy, by = c("study_id","patient_id", "sample_id"))
+patient_sample_cleaned$assay <- if_else(patient_sample_cleaned$study_id=='desm_broad_2015', patient_sample_cleaned$assay.y, patient_sample_cleaned$assay.x)
+patient_sample_cleaned$assay.x <- NULL
+patient_sample_cleaned$assay.y <- NULL
+patient_sample_cleaned$assay[patient_sample_cleaned$study_id == "skcm_ucla_2016"] <- "WES"
+patient_sample_cleaned$assay[patient_sample_cleaned$study_id == "skcm_broad"] <- "WES"
+patient_sample_cleaned$assay[patient_sample_cleaned$study_id == "skcm_tcga_pan_can_atlas_2018"] <- "WES"
+patient_sample_cleaned$assay[patient_sample_cleaned$study_id == "skcm_broad_dfarber"] <- "WGS"
+patient_sample_cleaned$assay[patient_sample_cleaned$study_id == "mel_tsam_liang_2017"] <- "WES"
+patient_sample_cleaned$assay[patient_sample_cleaned$study_id == "cscc_hgsc_bcm_2014"] <- "WES"
+patient_sample_cleaned$assay[patient_sample_cleaned$study_id == "skcm_yale"] <- "WES"
+patient_sample_cleaned$assay[patient_sample_cleaned$study_id == "skcm_broad_brafresist_2012"] <- "WES"
+patient_sample_cleaned$assay[patient_sample_cleaned$study_id == "cscc_dfarber_2015"] <- "OncoPanelv2"
+patient_sample_cleaned$assay[patient_sample_cleaned$study_id == "skcm_vanderbilt_mskcc_2015"] <- "MSK-IMPACT"
+
+patient_sample_cleaned$genome_covered_length <- 30
+patient_sample_cleaned$genome_covered_length <- if_else(patient_sample_cleaned$study_id == 'cscc_dfarber_2015', 2.9, patient_sample_cleaned$genome_covered_length)
+patient_sample_cleaned$genome_covered_length <- if_else(patient_sample_cleaned$study_id == 'desm_broad_2015' & patient_sample_cleaned$assay == 'WES', 35.7, patient_sample_cleaned$genome_covered_length)
+patient_sample_cleaned$genome_covered_length <- if_else(patient_sample_cleaned$study_id == 'desm_broad_2015' & patient_sample_cleaned$assay == 'NimbleGen', 7, patient_sample_cleaned$genome_covered_length)
+patient_sample_cleaned$genome_covered_length <- if_else(patient_sample_cleaned$study_id == 'skcm_vanderbilt_mskcc_2015', 1.5, patient_sample_cleaned$genome_covered_length)
+patient_sample_cleaned$genome_covered_length <- if_else(patient_sample_cleaned$study_id == 'cscc_hgsc_bcm_2014', 42, patient_sample_cleaned$genome_covered_length)
+patient_sample_cleaned$genome_covered_length <- if_else(patient_sample_cleaned$study_id == 'skcm_yale', 22.45, patient_sample_cleaned$genome_covered_length)
+
+patient_sample_cleaned$normalised_mut_count <- round((patient_sample_cleaned$mutation_count/patient_sample_cleaned$genome_covered_length),2)
+patient_sample_cleaned$normalised_mut_count <- if_else(is.element(patient_sample_cleaned$assay, c( 'WES', 'Exome', 'WGS')), 1.5 * patient_sample_cleaned$normalised_mut_count, patient_sample_cleaned$normalised_mut_count)
+
+write_csv(patient_sample_cleaned, "/Users/Aaron/git/TMB/tmb-sqlDB/src/main/r/tmb_melanoma/patient_sample_cleaned.csv")
+
+
+
+ggplot(patient_sample_cleaned) + geom_boxplot(aes(study_id, normalised_mut_count)) + scale_y_continuous(limits = c(0, 200))
