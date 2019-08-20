@@ -182,3 +182,6 @@ patient_sample_cleaned$stage_at.presentation <- gsub('a', 'A', patient_sample_cl
 #patient_sample_cleaned$stage_at.presentation <- gsub('NA', '', patient_sample_cleaned$stage_at.presentation)
 patient_sample_cleaned$stage_at.presentation <- gsub('c', 'C', patient_sample_cleaned$stage_at.presentation)
 patient_sample_cleaned$stage_at.presentation <- gsub('b', 'B', patient_sample_cleaned$stage_at.presentation)
+
+write_csv(patient_sample_cleaned, "/Users/Aaron/git/TMB/tmb-sqlDB/src/main/r/tmb_melanoma/patient_sample_cleaned.csv")
+
