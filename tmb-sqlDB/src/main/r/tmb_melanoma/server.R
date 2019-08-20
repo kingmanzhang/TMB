@@ -12,35 +12,35 @@ library(readxl)
 library(tidyverse)
 
 # Define server logic required to draw a histogram
-shinyServer(function(input, output) {
+shinyServer(function(input, output, session) {
     
-    # load data
-    data <- read_excel("./Melanoma_Combined_File.xls", sheet = 1)
-
-    output$distPlot <- renderPlot({
-        
-        filtered <- data %>% 
-            #select(`Patient ID`,`Sample ID`, `Stage at Presentation`, `Mutation Count`) %>% 
-            mutate(`Mutation Count` = as.integer(`Mutation Count`)) %>%
-            distinct()
-        
-        x_var = input$x_var
-        if (x_var == "Stage at Presentation") {
-            ggplot(filtered) + 
-                geom_point(aes(x = `Stage at Presentation`, y = `Mutation Count`)) +
-                title("TMB ~ Stage at Presentation")
-        } else if (x_var == "Oncotree Code"){
-            ggplot(filtered) + 
-                geom_point(aes(x = `Oncotree Code`, y = `Mutation Count`)) +
-                title("TMB ~ Oncotree Code")
-        } else{
-            
-        }
-        
-        
-
+    output$studies_selected <- renderText({
+        studies <- paste(input$studies, collapse = ", ")
+        paste("You chose", studies)
     })
     
-    #output$x_var = 
+    output$plot1 <- renderPlot({
+        plot(cars)
+    })
+    
+    output$table1 <- renderTable(
+        cars
+    )
+    
+    output$plot2 <- renderPlot({
+        plot(cars, col='red')
+    })
+    
+    output$table2 <- renderTable(
+        cars
+    )
+    
+    output$plot3 <- renderPlot({
+        plot(cars, col='blue')
+    })
+    
+    output$table3 <- renderTable(
+        cars
+    )
 
 })
