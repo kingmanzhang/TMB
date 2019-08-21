@@ -133,7 +133,7 @@ shinyServer(function(input, output, session) {
     
     
     output$plot3 <- renderPlot({
-        ggplot(clinicalDataInput()) + geom_violin(aes_string(x = clinicalDataVar(), y = 'tmb'))
+        ggplot(clinicalDataInput()) + geom_violin(aes_string(x = clinicalDataVar(), y = 'tmb', fill=clinicalDataVar()))
     })
     
     output$table3 <- renderTable(

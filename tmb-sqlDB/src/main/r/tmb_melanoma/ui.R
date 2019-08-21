@@ -75,7 +75,14 @@ shinyUI(navbarPage(
              
              mainPanel(
                  tabsetPanel(
-                     tabPanel("Plot", plotOutput("plot3")), 
+                     tabPanel("Plot", 
+                              p("TMB Distribution against Cancer Stage"),
+                              plotOutput("plot3"),
+                              p(),
+                              p(),
+                              p(),
+                              p("Note: The Cancer stage described here utilizes AJCC staging system and applied to all the studies. M stage 
+                                is categorized as stage IV ")),
                      tabPanel("Table", tableOutput("table3"))
                  )
              )
