@@ -15,10 +15,10 @@ shinyUI(navbarPage(
     tabPanel("Study", 
              sidebarPanel(
                  # Inputs excluded for brevity
-                 selectInput("tmb_source", "TMB Source", 
-                             c("cBioportal summary", "computed from raw"),
+                 selectInput("tmb_source_1", "TMB Source", 
+                             c("cBioportal summary", "non-silent (Hack 1)"),
                              selected = "cBioportal summary"),
-                 checkboxGroupInput("studies", "studies",
+                 checkboxGroupInput("studies_1", "Studies",
                                 unique(patient_sample_cleaned$study_id), 
                                 selected = unique(patient_sample_cleaned$study_id))
              ),
@@ -37,7 +37,7 @@ shinyUI(navbarPage(
              sidebarPanel(
                  # Inputs excluded for brevity
                  selectInput("tmb_source", "TMB Source", 
-                             c("cBioportal summary", "computed from raw"),
+                             c("cBioportal summary", "non-silent (Hack 1)"),
                              selected = "cBioportal summary"),
                  textInput("gene", "gene", 
                              "BRAF")
@@ -52,13 +52,15 @@ shinyUI(navbarPage(
              ),
     tabPanel("Clinical", 
              sidebarPanel(
-                 # Inputs excluded for brevity
-                 selectInput("tmb_source", "TMB Source", 
-                             c("cBioportal summary", "computed from raw"),
+                 selectInput("tmb_source_3", "TMB Source", 
+                             c("cBioportal summary", "non-silent (Hack 1)"),
                              selected = "cBioportal summary"),
                  selectInput("clinical variable", "cli_var", 
                              c("tumor stage", "tumor type"),
-                             selected = "tumor stage")
+                             selected = "tumor stage"),
+                 checkboxGroupInput("studies_3", "Studies",
+                                    unique(patient_sample_cleaned$study_id), 
+                                    selected = unique(patient_sample_cleaned$study_id))
              ),
              
              mainPanel(

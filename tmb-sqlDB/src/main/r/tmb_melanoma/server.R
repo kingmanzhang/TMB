@@ -17,12 +17,22 @@ patient_sample_cleaned <- read.csv("patient_sample_cleaned.csv", stringsAsFactor
 # Define server logic required to draw a histogram
 shinyServer(function(input, output, session) {
     
+    ##############
+    #control Nav 1
+    ##############
     studiesSelected <- reactive({
-        input$studies
+        input$studies_1
     })
     
-    studiesDataInput <- reactive({
-        patient_sample_cleaned %>% filter(is.element(study_id, input$studies))
+    tmbSourceInput_1 <- reactive({
+        switch (input$tmb_source_1,
+                "cBioportal summary" = patient_sample_cleaned  %>% mutate(tmb = normalised_mut_count), 
+                "non-silent (Hack 1)" = patient_sample_cleaned %>% mutate(tmb = normalised_mut_count_non_silent)
+        )
+    })
+    
+    studiesDataInput_1 <- reactive({
+        tmbSourceInput_1() %>% filter(is.element(study_id, input$studies_1))
     })
     
     output$studiesSelected <- renderText(
@@ -30,15 +40,20 @@ shinyServer(function(input, output, session) {
     )
     
     output$plot1 <- renderPlot({
-        ggplot(studiesDataInput()) + 
-            geom_boxplot(aes(study_id, normalised_mut_count)) + 
+        ggplot(studiesDataInput_1()) + 
+            geom_boxplot(aes(study_id, tmb)) + 
             scale_y_continuous(limits = c(0, 200)) +
             theme(axis.text.x = element_text(angle = 90))
     })
     
     output$table1 <- renderTable(
-        studiesDataInput() %>% select(study_id, patient_id, sample_id, normalised_mut_count)
+        studiesDataInput_1() %>% select(study_id, patient_id, sample_id, tmb)
     )
+    
+    
+    ##############
+    #control Nav 2
+    ##############
     
     output$plot2 <- renderPlot({
         plot(cars, col='red')
@@ -48,29 +63,41 @@ shinyServer(function(input, output, session) {
         cars
     )
     
-    clinicalDataVar <- reactive({
-        input$`clinical variable`
+    
+    
+    ##############
+    #control Nav 3
+    ##############
+    tmbSourceInput_3 <- reactive({
+        switch (input$tmb_source_3,
+                "cBioportal summary" = patient_sample_cleaned  %>% mutate(tmb = normalised_mut_count), 
+                "non-silent (Hack 1)" = patient_sample_cleaned %>% mutate(tmb = normalised_mut_count_non_silent)
+        )
     })
     
+    studiesDataInput_3 <- reactive({
+        tmbSourceInput_3() %>% filter(is.element(study_id, input$studies_3))
+    })
+    
+    clinicalDataVar <- reactive({
+        switch (input$`clinical variable`,
+                "tumor stage" = "stage_at.presentation", 
+                "tumor type" = "cancer_type"
+        )
+    })
+    
+    clinicalDataInput <- reactive({
+        studiesDataInput_3() %>% select(study_id, patient_id, sample_id, clinicalDataVar() , tmb)
+    })
+    
+    
+    
     output$plot3 <- renderPlot({
-        if (clinicalDataVar() == "tumor stage") {
-            ggplot(patient_sample_cleaned) + geom_violin(aes(x = stage_at.presentation, y = normalised_mut_count, fill = stage_at.presentation))
-        } else if(clinicalDataVar() == "tumor type"){
-            ggplot(patient_sample_cleaned) + geom_violin(aes(x = cancer_type, y = normalised_mut_count, fill = cancer_type))
-        } else {
-            
-        }
-        
+        ggplot(clinicalDataInput()) + geom_violin(aes_string(x = clinicalDataVar(), y = 'tmb'))
     })
     
     output$table3 <- renderTable(
-        if (clinicalDataVar() == "tumor stage") {
-            patient_sample_cleaned %>% select(study_id, patient_id, sample_id, stage_at.presentation, normalised_mut_count)
-        } else if(clinicalDataVar() == "tumor type"){
-            patient_sample_cleaned %>% select(study_id, patient_id, sample_id, cancer_type, normalised_mut_count)
-        } else {
-            
-        }
+        clinicalDataInput()
     )
 
 })
