@@ -44,8 +44,8 @@ shinyServer(function(input, output, session) {
     
     output$plot1 <- renderPlot({
         ggplot(studiesDataInput_1()) + 
-            geom_boxplot(aes(study_id, tmb)) + 
-            scale_y_continuous(limits = c(0, 200)) +
+            geom_boxplot(aes(study_id, tmb, fill = assay)) + 
+            scale_y_continuous(limits = c(0, 200)) + ylab("tumor mutation burden") +
             theme(axis.text.x = element_text(angle = 90))
     })
     
@@ -53,10 +53,32 @@ shinyServer(function(input, output, session) {
         studiesDataInput_1() %>% select(study_id, patient_id, sample_id, tmb)
     )
     
+    output$summary1 <- DT::renderDataTable(
+        studiesDataInput_1() %>% 
+            select(study_id, patient_id, sample_id, tmb) %>% 
+            group_by(study_id) %>%
+            summarise(sample_size = n(), 
+                      mean = round(mean(tmb, na.rm = T), 1), 
+                      `standard error` = round(sd(tmb, na.rm = T), 1), 
+                      median = round(median(tmb, na.rm = T),1))
+    )
+    
+    output$p_matrix_1 <- renderTable({
+        p_test_data <- studiesDataInput_1() %>% select(study_id, tmb)
+        l = split(p_test_data$tmb, p_test_data$study_id)
+        m <- p_value_matrix(l)
+        rownames(m) = 1:length(l)
+        colnames(m) = 1:length(l)
+        m
+    }, rownames = TRUE
+    )
     
     ##############
     #control Nav 2
     ##############
+    studiesSelected2 <- reactive({
+        input$studies_2
+    })
     
     tmbSourceInput_2 <- reactive({
         switch (input$tmb_source_2,
@@ -72,7 +94,22 @@ shinyServer(function(input, output, session) {
     geneSymbolInput <- reactive({input$gene})
     
     geneQueryData <- reactive({
-        tmb_vs_single_gene(geneSymbolInput(), dbcon, studiesDataInput_2())
+        if (length(studiesSelected2()) == 0){
+            target_samples <- query_samples_with_mutant_gene(geneSymbolInput(), dbcon)
+        }
+        if (length(studiesSelected2()) > 0){
+            target_samples <- query_samples_with_mutant_gene_within_studies(geneSymbolInput(), dbcon, studiesSelected2())
+        }
+        
+        data_for_plot <- studiesDataInput_2() %>% 
+            select(study_id, patient_id, sample_id, normalised_mut_count, normalised_mut_count_non_silent, tmb) %>% 
+            left_join(
+                target_samples %>% 
+                    rename(study_id = Study_Id, sample_id = Tumor_Sample_Barcode) %>%
+                    mutate(mutant = 'MT'), 
+                by = c('study_id', 'sample_id')
+            ) %>% 
+            mutate(HGVSp_Short = if_else(is.na(mutant), 'WT', mutant))
     })
     
     genePositionInput <- reactive({
@@ -81,14 +118,29 @@ shinyServer(function(input, output, session) {
     
     genePositionQueryData <- reactive({
         if (!is.na(genePositionInput())){
-            tmb_vs_single_gene_at_position(geneSymbolInput(), genePositionInput(), dbcon, studiesDataInput_2())
+            target_samples <- query_samples_with_mutant_gene_at_position_within_studies(geneSymbolInput(), genePositionInput(), dbcon, studiesSelected2())
+            data_for_plot <- studiesDataInput_2() %>% 
+                select(study_id, patient_id, sample_id, normalised_mut_count, normalised_mut_count_non_silent, tmb) %>% 
+                left_join(
+                    target_samples %>% 
+                        rename(study_id = Study_Id, sample_id = Tumor_Sample_Barcode) %>%
+                        mutate(mutant = 'YES'),
+                    by = c('study_id', 'sample_id')
+                ) %>% 
+                mutate(HGVSp_Short = if_else(is.na(mutant), 'WT_aa', HGVSp_Short))
         }
     })
     
     output$plot2 <- renderPlot({
-        ggplot(geneQueryData()) + 
-            geom_violin(aes(x = HGVSp_Short, y = normalised_mut_count, fill = HGVSp_Short )) +
-            xlab(paste(geneSymbolInput(), 'status'))
+        data <- geneQueryData()
+        if (length(unique(data$HGVSp_Short)) == 2){
+            l = split(data$tmb, data$HGVSp_Short)
+            p = round(wilcox.test(l[[1]], l[[2]])$p.value, 4)
+        }
+        ggplot(data) + 
+            geom_violin(aes(x = HGVSp_Short, y = tmb, fill = HGVSp_Short )) + 
+            scale_x_discrete(breaks = c("WT", 'MT'), labels = c("Wild Type", "Mutant")) +
+            xlab(paste(geneSymbolInput(), 'status')) + ylab("tumor mutation burden") + theme(legend.position = 'na')
     })
     
     output$table2 <- DT::renderDataTable(
@@ -98,8 +150,9 @@ shinyServer(function(input, output, session) {
     output$plot2b <- renderPlot({
         if (!is.na(genePositionInput())){
             ggplot(genePositionQueryData()) + 
-                geom_violin(aes(x = HGVSp_Short, y = normalised_mut_count, fill = HGVSp_Short )) +
-                xlab(sprintf("%s mutation status at position %d", geneSymbolInput(), genePositionInput()))
+                geom_violin(aes(x = HGVSp_Short, y = tmb, fill = HGVSp_Short)) +
+                xlab(sprintf("%s mutation status at position %d", geneSymbolInput(), genePositionInput())) +
+                ylab("tumor mutation burden")
         }
     })
     
@@ -130,14 +183,26 @@ shinyServer(function(input, output, session) {
         studiesDataInput_3() %>% select(study_id, patient_id, sample_id, clinicalDataVar() , tmb)
     })
     
-    
-    
     output$plot3 <- renderPlot({
-        ggplot(clinicalDataInput()) + geom_violin(aes_string(x = clinicalDataVar(), y = 'tmb'))
+        ggplot(clinicalDataInput()) + 
+            geom_violin(aes_string(x = clinicalDataVar(), y = 'tmb', fill = clinicalDataVar()), draw_quantiles=0.5) + 
+            scale_y_continuous(limits = c(0,200)) +
+            ylab("tumor mutation burden") + 
+            theme(legend.position = "na")
     })
     
     output$table3 <- DT::renderDataTable(
         clinicalDataInput()
+    )
+    
+    output$p_matrix_3 <- renderTable({
+        p_test_data <- clinicalDataInput() %>% select(clinicalDataVar(), tmb)
+        l = split(p_test_data$tmb, p_test_data[,clinicalDataVar()])
+        m <- p_value_matrix(l)
+        rownames(m) = 1:length(l)
+        colnames(m) = 1:length(l)
+        m
+    }, rownames = TRUE
     )
 
 })

@@ -1,5 +1,50 @@
 # Query for a single gene, binarize the result to wildtype (WT) or mutant (MT). Return a dataframe for plotting
 # tumor mutation counts against the gene mutation status.
+query_samples_with_mutant_gene <- function(gene_symbol, dbcon){
+    query <-  sprintf("
+          SELECT 
+                DISTINCT Study_Id, Tumor_Sample_Barcode, Hugo_Symbol, HGVSp_Short 
+          FROM 
+                mutations 
+          WHERE Hugo_Symbol = '%s'", gene_symbol)
+    result <- dbGetQuery(dbcon, query)
+    return (result)
+}
+
+query_samples_with_mutant_gene_within_studies <- function(gene_symbol, dbcon, studies){
+    studies_formatted <- str_c(shQuote(studies), collapse = ",")
+    query <-  sprintf("
+          SELECT 
+                DISTINCT Study_Id, Tumor_Sample_Barcode, Hugo_Symbol, HGVSp_Short 
+          FROM 
+                mutations 
+          WHERE Hugo_Symbol = '%s' AND study_id IN (%s)", gene_symbol, studies_formatted)
+    result <- dbGetQuery(dbcon, query)
+    return (result)
+}
+
+query_samples_with_mutant_gene_at_position <- function(gene_symbol, position, dbcon){
+    query <-  sprintf("
+          SELECT 
+                DISTINCT Study_Id, Tumor_Sample_Barcode, Hugo_Symbol, HGVSp_Short 
+          FROM 
+                mutations 
+          WHERE Hugo_Symbol = '%s' AND HGVSp_Short LIKE 'p._%d_'", gene_symbol, position)
+    dbGetQuery(dbcon, query)
+}
+
+query_samples_with_mutant_gene_at_position_within_studies <- function(gene_symbol, position, dbcon, studies){
+    studies_formatted <- str_c(shQuote(studies), collapse = ",")
+    query <-  sprintf("
+          SELECT 
+                DISTINCT Study_Id, Tumor_Sample_Barcode, Hugo_Symbol, HGVSp_Short 
+          FROM 
+                mutations 
+          WHERE Hugo_Symbol = '%s' AND HGVSp_Short LIKE 'p._%d_' AND study_id IN (%s)", gene_symbol, position, studies_formatted)
+    dbGetQuery(dbcon, query)
+}
+
+
 tmb_vs_single_gene <- function(gene_symbol, dbcon, patient_sample_cleaned){
     query <-  sprintf("
           SELECT 
@@ -106,3 +151,24 @@ braf_v600 <- function(dbcon, patient_sample_cleaned){
     return (data_for_plot)
 }
 
+p_value_matrix <- function(list, test='wilcox.test'){
+    N = length(list)
+    m <- matrix(' ', nrow = N, ncol = N)
+    for (i in 1:N){
+        for (j in 1:N){
+            symbol = ' '
+            p <- wilcox.test(list[[i]], list[[j]])$p.value
+            if (p < 0.05) {
+                symbol = '*'
+            } else if (p < 0.01){
+                symbol = '**'
+            } else if (p < 0.001){
+                symbol = '*'
+            } else {
+                symbol = ' '
+            }
+            m[i,j] = symbol
+        }
+    }
+    return (m)
+}

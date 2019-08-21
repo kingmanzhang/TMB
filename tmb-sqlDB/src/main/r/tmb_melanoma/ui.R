@@ -29,8 +29,17 @@ shinyUI(navbarPage(
                  tabsetPanel(
                      tabPanel("Plot", 
                               plotOutput("plot1"),
-                              p("selected studies: "),
-                              textOutput('studiesSelected')), 
+                              p('\n\n'),
+                              #p("selected studies: "),
+                              #textOutput('studiesSelected'), 
+                              p('\n\n'),
+                              br(),
+                              br(),
+                              h4("Pairwise Wilcox Test (p value)"),
+                              uiOutput("p_matrix_1")
+                              ), 
+                     tabPanel("Summary", h4('Summary Statistics for Selected Studies'),
+                              DT::dataTableOutput('summary1')),
                      tabPanel("Table", DT::dataTableOutput("table1"))
                  )
              )
@@ -54,8 +63,8 @@ shinyUI(navbarPage(
                  tabsetPanel(
                      tabPanel("Plot", 
                               plotOutput("plot2"), 
-                              p(),
-                              p(),
+                              br(),
+                              br(),
                               plotOutput("plot2b")), 
                      tabPanel("Table", DT::dataTableOutput("table2"))
                  )
@@ -76,7 +85,11 @@ shinyUI(navbarPage(
              
              mainPanel(
                  tabsetPanel(
-                     tabPanel("Plot", plotOutput("plot3")), 
+                     tabPanel("Plot", plotOutput("plot3"), 
+                              br(),
+                              br(),
+                              h4("Pairwise Wilcox Test (p value)"),
+                              uiOutput("p_matrix_3")), 
                      tabPanel("Table", DT::dataTableOutput("table3"))
                  )
              )
