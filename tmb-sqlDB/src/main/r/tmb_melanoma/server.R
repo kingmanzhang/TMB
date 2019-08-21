@@ -14,7 +14,6 @@ library(RSQLite)
 source("script.R")
 
 # shared data across sessions
-patient_sample_cleaned <- read.csv("patient_sample_cleaned.csv", stringsAsFactors = FALSE, header = TRUE, sep = ',')
 db_url <- "tmb.sqlite"
 dbcon <- dbConnect(RSQLite::SQLite(), db_url)
 
