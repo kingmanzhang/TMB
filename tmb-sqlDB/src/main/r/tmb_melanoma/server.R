@@ -131,6 +131,29 @@ shinyServer(function(input, output, session) {
         }
     })
     
+    other_genesInput <- reactive({
+        input_string = input$other_gene
+        if (input_string != '(maximum 2)'){
+            strsplit(input_string, ',[ ]?| ')[[1]]
+        } else {
+            character()
+        }
+    })
+    
+    multiGeneQuery <- reactive({
+        genes = other_genesInput
+        # query result
+        target_samples <- query_samples_with_multiple_genes_within_studies(c(geneSymbolInput(), other_genesInput()), studiesSelected2(), dbcon)
+        data_for_plot <- studiesDataInput_2() %>% 
+            select(study_id, patient_id, sample_id, normalised_mut_count, normalised_mut_count_non_silent, tmb) %>% 
+            left_join(
+                target_samples %>% 
+                    rename(study_id = Study_Id, sample_id = Tumor_Sample_Barcode),
+                by = c('study_id', 'sample_id')
+            ) %>% 
+            mutate(multiMutationStatus = if_else(is.na(multiMutationStatus), 'WT', multiMutationStatus))
+    })
+    
     output$plot2 <- renderPlot({
         data <- geneQueryData()
         if (length(unique(data$HGVSp_Short)) == 2){
@@ -155,6 +178,17 @@ shinyServer(function(input, output, session) {
                 ylab("tumor mutation burden")
         }
     })
+    
+    output$plot2c <- renderPlot({
+        if (length(other_genesInput())!=0){
+            ggplot(multiGeneQuery()) + geom_violin(aes(x = multiMutationStatus, y = tmb, fill = multiMutationStatus))
+        }
+    })
+    
+    output$table2 <- DT::renderDataTable(
+        multiGeneQuery()
+    )
+    
     
     
     
@@ -199,8 +233,9 @@ shinyServer(function(input, output, session) {
         p_test_data <- clinicalDataInput() %>% select(clinicalDataVar(), tmb)
         l = split(p_test_data$tmb, p_test_data[,clinicalDataVar()])
         m <- p_value_matrix(l)
-        rownames(m) = 1:length(l)
-        colnames(m) = 1:length(l)
+        names <- as.character(names(l))
+        rownames(m) = names
+        colnames(m) = names
         m
     }, rownames = TRUE
     )

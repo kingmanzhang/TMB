@@ -127,3 +127,4 @@ ggplot(data_for_plot) +
 # count the number of mutations per sample, excluding silent mutations
 query = "SELECT Study_Id, Tumor_Sample_Barcode, count(*) as N FROM   (SELECT DISTINCT Study_Id, Tumor_Sample_Barcode, Hugo_Symbol, HGVSp_Short FROM mutations) as temp GROUP BY Study_Id, Tumor_Sample_Barcode ORDER BY Study_Id, Tumor_Sample_Barcode"
 dbGetQuery(dbcon, query)
+

@@ -44,6 +44,51 @@ query_samples_with_mutant_gene_at_position_within_studies <- function(gene_symbo
     dbGetQuery(dbcon, query)
 }
 
+query_samples_with_multiple_genes <- function(genes, dbcon){
+    genes_formatted <- str_c(shQuote(genes), collapse = ",")
+    # get mutation status of multiple genes
+    query = sprintf("SELECT 
+                        DISTINCT Study_Id, Tumor_Sample_Barcode, group_concat(Hugo_Symbol, '/') AS multiMutationStatus
+                    FROM 
+                        (SELECT 
+                            DISTINCT Study_Id, Tumor_Sample_Barcode, Hugo_Symbol 
+                        FROM 
+                            mutations 
+                        WHERE 
+                            Hugo_Symbol in (%s) 
+                        ORDER BY 
+                            Hugo_Symbol) as target 
+                    GROUP BY Study_Id, Tumor_Sample_Barcode", genes_formatted)
+    dbGetQuery(dbcon, query)
+}
+
+query_samples_with_multiple_genes_within_studies <- function(genes, studies, dbcon){
+    genes_formatted <- str_c(shQuote(genes), collapse = ",")
+    studies_formatted <- str_c(shQuote(studies), collapse = ",")
+    # get mutation status of multiple genes
+    query = sprintf("SELECT 
+                        DISTINCT Study_Id, Tumor_Sample_Barcode, group_concat(Hugo_Symbol, '/') AS multiMutationStatus
+                    FROM 
+                        (SELECT 
+                            DISTINCT Study_Id, Tumor_Sample_Barcode, Hugo_Symbol 
+                        FROM 
+                            mutations 
+                        WHERE 
+                            Hugo_Symbol in (%s) AND Study_Id in (%s) 
+                        ORDER BY 
+                            Hugo_Symbol) as target 
+                    GROUP BY Study_Id, Tumor_Sample_Barcode", genes_formatted, studies_formatted)
+    dbGetQuery(dbcon, query)
+}
+
+data_for_plot <- patient_sample_cleaned %>% 
+    select(study_id, patient_id, sample_id, normalised_mut_count, normalised_mut_count_non_silent) %>% 
+    left_join(
+        target_samples %>% 
+            rename(study_id = Study_Id, sample_id = Tumor_Sample_Barcode),
+        by = c('study_id', 'sample_id')
+    ) %>% 
+    mutate(multiMutationStatus = if_else(is.na(multiMutationStatus), 'WT', multiMutationStatus))
 
 tmb_vs_single_gene <- function(gene_symbol, dbcon, patient_sample_cleaned){
     query <-  sprintf("
@@ -157,7 +202,10 @@ p_value_matrix <- function(list, test='wilcox.test'){
     for (i in 1:N){
         for (j in 1:N){
             symbol = ' '
-            p <- wilcox.test(list[[i]], list[[j]])$p.value
+            p <- 1
+            tryCatch({p <- wilcox.test(list[[i]], list[[j]])$p.value}, 
+                     error = function(e) {p <<- 1})
+            
             if (p < 0.05) {
                 symbol = '*'
             } else if (p < 0.01){
