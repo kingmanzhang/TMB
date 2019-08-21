@@ -11,20 +11,33 @@ library(shiny)
 library(readxl)
 library(tidyverse)
 
+# shared data across sessions
+patient_sample_cleaned <- read.csv("patient_sample_cleaned.csv", stringsAsFactors = FALSE, header = TRUE, sep = ',')
+
 # Define server logic required to draw a histogram
 shinyServer(function(input, output, session) {
     
-    output$studies_selected <- renderText({
-        studies <- paste(input$studies, collapse = ", ")
-        paste("You chose", studies)
+    studiesSelected <- reactive({
+        input$studies
     })
     
+    studiesDataInput <- reactive({
+        patient_sample_cleaned %>% filter(is.element(study_id, input$studies))
+    })
+    
+    output$studiesSelected <- renderText(
+        paste(studiesSelected(), collapse = ", ")
+    )
+    
     output$plot1 <- renderPlot({
-        plot(cars)
+        ggplot(studiesDataInput()) + 
+            geom_boxplot(aes(study_id, normalised_mut_count)) + 
+            scale_y_continuous(limits = c(0, 200)) +
+            theme(axis.text.x = element_text(angle = 90))
     })
     
     output$table1 <- renderTable(
-        cars
+        studiesDataInput() %>% select(study_id, patient_id, sample_id, normalised_mut_count)
     )
     
     output$plot2 <- renderPlot({
@@ -35,12 +48,29 @@ shinyServer(function(input, output, session) {
         cars
     )
     
+    clinicalDataVar <- reactive({
+        input$`clinical variable`
+    })
+    
     output$plot3 <- renderPlot({
-        plot(cars, col='blue')
+        if (clinicalDataVar() == "tumor stage") {
+            ggplot(patient_sample_cleaned) + geom_violin(aes(x = stage_at.presentation, y = normalised_mut_count, fill = stage_at.presentation))
+        } else if(clinicalDataVar() == "tumor type"){
+            ggplot(patient_sample_cleaned) + geom_violin(aes(x = cancer_type, y = normalised_mut_count, fill = cancer_type))
+        } else {
+            
+        }
+        
     })
     
     output$table3 <- renderTable(
-        cars
+        if (clinicalDataVar() == "tumor stage") {
+            patient_sample_cleaned %>% select(study_id, patient_id, sample_id, stage_at.presentation, normalised_mut_count)
+        } else if(clinicalDataVar() == "tumor type"){
+            patient_sample_cleaned %>% select(study_id, patient_id, sample_id, cancer_type, normalised_mut_count)
+        } else {
+            
+        }
     )
 
 })

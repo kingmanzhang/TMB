@@ -19,16 +19,17 @@ shinyUI(navbarPage(
                              c("cBioportal summary", "computed from raw"),
                              selected = "cBioportal summary"),
                  checkboxGroupInput("studies", "studies",
-                                c("Study 1"= "S1", "Study 2" = "S2", "Study 3" = "S3"),
-                                selected = c("S1", "S2", "S3"))
+                                unique(patient_sample_cleaned$study_id), 
+                                selected = unique(patient_sample_cleaned$study_id))
              ),
              
              mainPanel(
                  tabsetPanel(
-                     tabPanel("Plot", plotOutput("plot1")), 
-                     tabPanel("Table", tableOutput("table1")),
-                     p("selected studies"),
-                     textOutput("studies_selected")
+                     tabPanel("Plot", 
+                              plotOutput("plot1"),
+                              p("selected studies: "),
+                              textOutput('studiesSelected')), 
+                     tabPanel("Table", tableOutput("table1"))
                  )
              )
              ),
