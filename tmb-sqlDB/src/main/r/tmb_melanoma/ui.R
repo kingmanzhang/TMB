@@ -36,16 +36,25 @@ shinyUI(navbarPage(
     tabPanel("Gene", 
              sidebarPanel(
                  # Inputs excluded for brevity
-                 selectInput("tmb_source", "TMB Source", 
+                 selectInput("tmb_source_2", "TMB Source", 
                              c("cBioportal summary", "non-silent (Hack 1)"),
                              selected = "cBioportal summary"),
                  textInput("gene", "gene", 
-                             "BRAF")
+                             "BRAF"), 
+                 textInput("position", "Amino acid position", 
+                           ""),
+                 checkboxGroupInput("studies_2", "Studies",
+                                    unique(patient_sample_cleaned$study_id), 
+                                    selected = unique(patient_sample_cleaned$study_id))
              ),
              
              mainPanel(
                  tabsetPanel(
-                     tabPanel("Plot", plotOutput("plot2")), 
+                     tabPanel("Plot", 
+                              plotOutput("plot2"), 
+                              p(),
+                              p(),
+                              plotOutput("plot2b")), 
                      tabPanel("Table", tableOutput("table2"))
                  )
              )

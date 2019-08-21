@@ -10,9 +10,13 @@
 library(shiny)
 library(readxl)
 library(tidyverse)
+library(RSQLite)
+source("script.R")
 
 # shared data across sessions
 patient_sample_cleaned <- read.csv("patient_sample_cleaned.csv", stringsAsFactors = FALSE, header = TRUE, sep = ',')
+db_url <- "tmb.sqlite"
+dbcon <- dbConnect(RSQLite::SQLite(), db_url)
 
 # Define server logic required to draw a histogram
 shinyServer(function(input, output, session) {
@@ -55,13 +59,50 @@ shinyServer(function(input, output, session) {
     #control Nav 2
     ##############
     
+    tmbSourceInput_2 <- reactive({
+        switch (input$tmb_source_2,
+                "cBioportal summary" = patient_sample_cleaned  %>% mutate(tmb = normalised_mut_count), 
+                "non-silent (Hack 1)" = patient_sample_cleaned %>% mutate(tmb = normalised_mut_count_non_silent)
+        )
+    })
+    
+    studiesDataInput_2 <- reactive({
+        tmbSourceInput_2() %>% filter(is.element(study_id, input$studies_2))
+    })
+    
+    geneSymbolInput <- reactive({input$gene})
+    
+    geneQueryData <- reactive({
+        tmb_vs_single_gene(geneSymbolInput(), dbcon, studiesDataInput_2())
+    })
+    
+    genePositionInput <- reactive({
+        as.integer(input$position)
+    })
+    
+    genePositionQueryData <- reactive({
+        if (!is.na(genePositionInput())){
+            tmb_vs_single_gene_at_position(geneSymbolInput(), genePositionInput(), dbcon, studiesDataInput_2())
+        }
+    })
+    
     output$plot2 <- renderPlot({
-        plot(cars, col='red')
+        ggplot(geneQueryData()) + 
+            geom_violin(aes(x = HGVSp_Short, y = normalised_mut_count, fill = HGVSp_Short )) +
+            xlab(paste(geneSymbolInput(), 'status'))
     })
     
     output$table2 <- renderTable(
-        cars
+        geneQueryData()
     )
+    
+    output$plot2b <- renderPlot({
+        if (!is.na(genePositionInput())){
+            ggplot(genePositionQueryData()) + 
+                geom_violin(aes(x = HGVSp_Short, y = normalised_mut_count, fill = HGVSp_Short )) +
+                xlab(sprintf("%s mutation status at position %d", geneSymbolInput(), genePositionInput()))
+        }
+    })
     
     
     
