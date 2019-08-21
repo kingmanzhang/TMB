@@ -49,7 +49,7 @@ shinyServer(function(input, output, session) {
             theme(axis.text.x = element_text(angle = 90))
     })
     
-    output$table1 <- renderTable(
+    output$table1 <- DT::renderDataTable(
         studiesDataInput_1() %>% select(study_id, patient_id, sample_id, tmb)
     )
     
@@ -91,7 +91,7 @@ shinyServer(function(input, output, session) {
             xlab(paste(geneSymbolInput(), 'status'))
     })
     
-    output$table2 <- renderTable(
+    output$table2 <- DT::renderDataTable(
         geneQueryData()
     )
     
@@ -136,7 +136,7 @@ shinyServer(function(input, output, session) {
         ggplot(clinicalDataInput()) + geom_violin(aes_string(x = clinicalDataVar(), y = 'tmb'))
     })
     
-    output$table3 <- renderTable(
+    output$table3 <- DT::renderDataTable(
         clinicalDataInput()
     )
 

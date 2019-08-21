@@ -8,6 +8,7 @@
 #
 
 library(shiny)
+library(DT)
 
 
 # Define UI for application that draws a histogram
@@ -30,7 +31,7 @@ shinyUI(navbarPage(
                               plotOutput("plot1"),
                               p("selected studies: "),
                               textOutput('studiesSelected')), 
-                     tabPanel("Table", tableOutput("table1"))
+                     tabPanel("Table", DT::dataTableOutput("table1"))
                  )
              )
              ),
@@ -56,7 +57,7 @@ shinyUI(navbarPage(
                               p(),
                               p(),
                               plotOutput("plot2b")), 
-                     tabPanel("Table", tableOutput("table2"))
+                     tabPanel("Table", DT::dataTableOutput("table2"))
                  )
              )
              ),
@@ -76,7 +77,7 @@ shinyUI(navbarPage(
              mainPanel(
                  tabsetPanel(
                      tabPanel("Plot", plotOutput("plot3")), 
-                     tabPanel("Table", tableOutput("table3"))
+                     tabPanel("Table", DT::dataTableOutput("table3"))
                  )
              )
              )
