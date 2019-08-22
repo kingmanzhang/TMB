@@ -13,7 +13,7 @@ library(DT)
 
 # Define UI for application that draws a histogram
 shinyUI(navbarPage(
-    "Tumor Mutation Burden Distribution In Melanoma",
+    "Tumor Mutation Burden Viewer",
     tabPanel("Study", 
              sidebarPanel(
                  # Inputs excluded for brevity
