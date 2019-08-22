@@ -68,7 +68,7 @@ braf_c <- braf_c %>%
     ) %>% 
     mutate(BRAF_V600 = if_else(is.na(V600other), BRAF_V600,  'V600other'))
 
-data_for_plot <- patient_sample_cleaned %>% select(study_id, patient_id, sample_id, normalised_mut_count) %>% 
+data_for_plot <- patient_sample_cleaned %>% select(study_id, patient_id, sample_id, normalised_mut_count, normalised_mut_count_non_silent) %>% 
     left_join(braf_c, by = c('study_id', 'sample_id'))
 
 ggplot(data_for_plot) + geom_violin(aes(x = BRAF_V600, y = normalised_mut_count, fill = BRAF_V600)) + 
@@ -86,7 +86,7 @@ query <-  sprintf("
           WHERE Hugo_Symbol = '%s'", gene)
 target_samples <- dbGetQuery(dbcon, query)
 data_for_plot <- patient_sample_cleaned %>% 
-    select(study_id, patient_id, sample_id, normalised_mut_count) %>% 
+    select(study_id, patient_id, sample_id, normalised_mut_count, normalised_mut_count_non_silent) %>% 
     left_join(
         target_samples %>% 
             rename(study_id = Study_Id, sample_id = Tumor_Sample_Barcode) %>%
@@ -111,7 +111,7 @@ query <-  sprintf("
           WHERE Hugo_Symbol = '%s' AND HGVSp_Short LIKE 'p._%d_'", gene, amino_acid_position)
 target_samples <- dbGetQuery(dbcon, query)
 data_for_plot <- patient_sample_cleaned %>% 
-    select(study_id, patient_id, sample_id, normalised_mut_count) %>% 
+    select(study_id, patient_id, sample_id, normalised_mut_count, normalised_mut_count_non_silent) %>% 
     left_join(
         target_samples %>% 
             rename(study_id = Study_Id, sample_id = Tumor_Sample_Barcode) %>%
@@ -127,3 +127,6 @@ ggplot(data_for_plot) +
 # count the number of mutations per sample, excluding silent mutations
 query = "SELECT Study_Id, Tumor_Sample_Barcode, count(*) as N FROM   (SELECT DISTINCT Study_Id, Tumor_Sample_Barcode, Hugo_Symbol, HGVSp_Short FROM mutations) as temp GROUP BY Study_Id, Tumor_Sample_Barcode ORDER BY Study_Id, Tumor_Sample_Barcode"
 dbGetQuery(dbcon, query)
+
+ggplot(patient_sample_cleaned) + geom_violin(aes(x = study_id, y = normalised_mut_count)) + 
+    geom_label(x = 10, y = 200, label = 'hello')

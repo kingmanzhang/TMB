@@ -1,3 +1,4 @@
+*.Rhistory
 #do not track database for now
 *.sqlite
 

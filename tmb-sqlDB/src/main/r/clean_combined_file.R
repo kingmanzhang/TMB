@@ -1,7 +1,7 @@
 library(readxl)
 library(tidyverse)
 
-data <- read_excel("/Users/Aaron/git/TMB/src/main/r/tmb_melanoma/Melanoma_Combined_File_ad.xlsx", sheet = 1)
+data <- read_excel("/Users/Aaron/git/TMB/tmb-sqlDB/src/main/r/tmb_melanoma/Melanoma_Combined_File_ad.xlsx", sheet = 1)
 
 # merge Column T (Age at Diagnosis) and Column CM (Diagnosis Age)
 data$`Diagnosis Age` <- ifelse(is.na(data$`Diagnosis Age`), data$`Age at Diagnosis`, data$`Diagnosis Age`)
@@ -31,10 +31,8 @@ temp <- temp %>% mutate(`Radiation Therapy` = str_c(AB, BU, BX, CN, DB))
 data$`Radiation Therapy` = temp$`Radiation Therapy`
 
 #merge stages, DD, EB, EE
-data <- data %>%
-    mutate(`Stage at Presentation` = if_else(is.na(`Stage at Presentation`), `Tumor Stage`, `Stage at Presentation`)) %>%
-    mutate(`Stage at Presentation` = if_else(is.na(`Stage at Presentation`), `Neoplasm Disease Stage American Joint Committee on Cancer Code`, `Stage at Presentation`)) %>%
-    select(-c(`Tumor Stage`, `Neoplasm Disease Stage American Joint Committee on Cancer Code`))
+data <- data %>% mutate(`Stage at Presentation` = paste(`Tumor Stage`, `Stage at Presentation`,`Neoplasm Disease Stage American Joint Committee on Cancer Code`)) %>%
+       select(-c(`Tumor Stage`, `Neoplasm Disease Stage American Joint Committee on Cancer Code`))
 
 
 #merge purity
@@ -174,14 +172,30 @@ patient_sample_cleaned$immunotherapy <- if_else(patient_sample_cleaned$study_id 
 # patient_sample_cleaned %>% group_by(study_id, immunotherapy) %>% count() %>% View()
 
 # change cancer stage
-patient_sample_cleaned$stage_at.presentation <- gsub('III', '3', patient_sample_cleaned$stage_at.presentation)
+patient_sample_cleaned$stage_at.presentation <- gsub('NA', '', patient_sample_cleaned$stage_at.presentation)
+patient_sample_cleaned$stage_at.presentation <- gsub('Stage', '', patient_sample_cleaned$stage_at.presentation)
+patient_sample_cleaned$stage_at.presentation <- gsub('STAGE', '', patient_sample_cleaned$stage_at.presentation)
+patient_sample_cleaned$stage_at.presentation <- gsub('C', '', patient_sample_cleaned$stage_at.presentation)
+patient_sample_cleaned$stage_at.presentation <- gsub('B', '', patient_sample_cleaned$stage_at.presentation)
+patient_sample_cleaned$stage_at.presentation <- gsub('A', '', patient_sample_cleaned$stage_at.presentation)
+patient_sample_cleaned$stage_at.presentation <- gsub(',', '', patient_sample_cleaned$stage_at.presentation)
+patient_sample_cleaned$stage_at.presentation <- gsub('I/II', '1', patient_sample_cleaned$stage_at.presentation)
+patient_sample_cleaned$stage_at.presentation <- gsub('\\(NOS\\)', '', patient_sample_cleaned$stage_at.presentation)
+patient_sample_cleaned$stage_at.presentation <- gsub('Unknown', '', patient_sample_cleaned$stage_at.presentation)
 patient_sample_cleaned$stage_at.presentation <- gsub('IV', '4', patient_sample_cleaned$stage_at.presentation)
+patient_sample_cleaned$stage_at.presentation <- gsub('III', '3', patient_sample_cleaned$stage_at.presentation)
 patient_sample_cleaned$stage_at.presentation <- gsub('II', '2', patient_sample_cleaned$stage_at.presentation)
 patient_sample_cleaned$stage_at.presentation <- gsub('I', '1', patient_sample_cleaned$stage_at.presentation)
-patient_sample_cleaned$stage_at.presentation <- gsub('a', 'A', patient_sample_cleaned$stage_at.presentation)
-#patient_sample_cleaned$stage_at.presentation <- gsub('NA', '', patient_sample_cleaned$stage_at.presentation)
-patient_sample_cleaned$stage_at.presentation <- gsub('c', 'C', patient_sample_cleaned$stage_at.presentation)
-patient_sample_cleaned$stage_at.presentation <- gsub('b', 'B', patient_sample_cleaned$stage_at.presentation)
+patient_sample_cleaned$stage_at.presentation <- gsub('NOS', '', patient_sample_cleaned$stage_at.presentation)
+patient_sample_cleaned$stage_at.presentation <- gsub('M1c', '4', patient_sample_cleaned$stage_at.presentation)
+patient_sample_cleaned$stage_at.presentation <- gsub('M1a', '4', patient_sample_cleaned$stage_at.presentation)
+patient_sample_cleaned$stage_at.presentation <- gsub('M1b', '4', patient_sample_cleaned$stage_at.presentation)
+patient_sample_cleaned$stage_at.presentation <- gsub('c', '', patient_sample_cleaned$stage_at.presentation)
+patient_sample_cleaned$stage_at.presentation <- gsub('b', '', patient_sample_cleaned$stage_at.presentation)
+patient_sample_cleaned$stage_at.presentation <- gsub('a', '', patient_sample_cleaned$stage_at.presentation)
+# Stages are speicified based on the readings. I/II meaning it is stage 1 or 2. NOS means not otherwise specified. We chose to use stage 1 for all 1/2 and
+# M1a/M1b/M1c are metastasis stages. At this stage, the cancer has spread to other parts of body so it is traditionally denoted as stage 4.
+
 
 write_csv(patient_sample_cleaned, "/Users/Aaron/git/TMB/tmb-sqlDB/src/main/r/tmb_melanoma/patient_sample_cleaned.csv")
 
@@ -213,11 +227,24 @@ patient_sample_cleaned$genome_covered_length <- if_else(patient_sample_cleaned$s
 patient_sample_cleaned$genome_covered_length <- if_else(patient_sample_cleaned$study_id == 'cscc_hgsc_bcm_2014', 42, patient_sample_cleaned$genome_covered_length)
 patient_sample_cleaned$genome_covered_length <- if_else(patient_sample_cleaned$study_id == 'skcm_yale', 22.45, patient_sample_cleaned$genome_covered_length)
 
+patient_sample_cleaned$mutation_count <- as.numeric(patient_sample_cleaned$mutation_count)
 patient_sample_cleaned$normalised_mut_count <- round((patient_sample_cleaned$mutation_count/patient_sample_cleaned$genome_covered_length),2)
 patient_sample_cleaned$normalised_mut_count <- if_else(is.element(patient_sample_cleaned$assay, c( 'WES', 'Exome', 'WGS')), 1.5 * patient_sample_cleaned$normalised_mut_count, patient_sample_cleaned$normalised_mut_count)
 
 write_csv(patient_sample_cleaned, "/Users/Aaron/git/TMB/tmb-sqlDB/src/main/r/tmb_melanoma/patient_sample_cleaned.csv")
 
+### add mutation count directly from our mutation database (excluding non-silent mutation)
+patient_sample_cleaned <- read.csv("/Users/Aaron/git/TMB/tmb-sqlDB/src/main/r/tmb_melanoma/patient_sample_cleaned.csv", stringsAsFactors = FALSE)
+db_url <- "/Users/Aaron/git/TMB/tmb-sqlDB/src/main/resources/tmb.sqlite"
+dbcon <- dbConnect(RSQLite::SQLite(), db_url)
+query = "SELECT Study_Id, Tumor_Sample_Barcode, count(*) as N FROM   (SELECT DISTINCT Study_Id, Tumor_Sample_Barcode, Hugo_Symbol, HGVSp_Short FROM mutations) as temp GROUP BY Study_Id, Tumor_Sample_Barcode ORDER BY Study_Id, Tumor_Sample_Barcode"
+calculated_mut <- dbGetQuery(dbcon,query)
+#note: the query count mutations from the raw mutations tables (mutations_mskcc and mutations_extended), but only picks unique mutations per gene
+#it is under counting because in this case, homozygous will be counted once
+calculated_mut <- calculated_mut %>% rename(study_id = Study_Id, sample_id = Tumor_Sample_Barcode, non_silent_mutation_count = N)
 
+patient_sample_cleaned <- patient_sample_cleaned %>% left_join(calculated_mut, by = c('study_id', 'sample_id'))
 
-ggplot(patient_sample_cleaned) + geom_boxplot(aes(study_id, normalised_mut_count)) + scale_y_continuous(limits = c(0, 200))
+patient_sample_cleaned <- patient_sample_cleaned %>% mutate(normalised_mut_count_non_silent = non_silent_mutation_count / genome_covered_length)
+
+write_csv(patient_sample_cleaned, "/Users/Aaron/git/TMB/tmb-sqlDB/src/main/r/tmb_melanoma/patient_sample_cleaned.csv")
