@@ -1,4 +1,4 @@
-package com.kingmanzhang.tmb.curationFX.gui;
+package com.kingmanzhang.tmb.curationFX.gui.main;
 
 import javafx.fxml.FXML;
 import javafx.fxml.Initializable;
