@@ -136,57 +136,166 @@ shinyServer(function(input, output, session) {
     })
     
     multiGeneQuery <- reactive({
-        genes = other_genesInput
-        # query result
-        target_samples <- query_samples_with_multiple_genes_within_studies(c(geneSymbolInput(), other_genesInput()), studiesSelected2(), dbcon)
-        data_for_plot <- studiesDataInput_2() %>% 
-            select(study_id, patient_id, sample_id, normalised_mut_count, normalised_mut_count_non_silent, tmb) %>% 
-            left_join(
-                target_samples %>% 
-                    rename(study_id = Study_Id, sample_id = Tumor_Sample_Barcode),
-                by = c('study_id', 'sample_id')
-            ) %>% 
-            mutate(multiMutationStatus = if_else(is.na(multiMutationStatus), 'WT', multiMutationStatus))
+        if (length(other_genesInput())!= 0){
+            genes = other_genesInput()
+            # query result
+            target_samples <- query_samples_with_multiple_genes_within_studies(c(geneSymbolInput(), other_genesInput()), studiesSelected2(), dbcon)
+            data_for_plot <- studiesDataInput_2() %>% 
+                select(study_id, patient_id, sample_id, normalised_mut_count, normalised_mut_count_non_silent, tmb) %>% 
+                left_join(
+                    target_samples %>% 
+                        rename(study_id = Study_Id, sample_id = Tumor_Sample_Barcode),
+                    by = c('study_id', 'sample_id')
+                ) %>% 
+                mutate(multiMutationStatus = if_else(is.na(multiMutationStatus), 'WT', multiMutationStatus))
+        }
     })
     
     output$plot2 <- renderPlot({
         data <- geneQueryData()
         if (length(unique(data$HGVSp_Short)) == 2){
             l = split(data$tmb, data$HGVSp_Short)
-            p = round(wilcox.test(l[[1]], l[[2]])$p.value, 4)
+            p = formatC(wilcox.test(l[[1]], l[[2]])$p.value, format = "e", digits = 2)
+            p_label = paste("wilcox.test p value:", p, sep = '\n')
+        }else {
+            p_label = ''
         }
+        
+        # set upper limit to 0.9 percentile
+        y_upper_limit <- quantile(data$tmb, 0.9, na.rm = TRUE)
         ggplot(data) + 
-            geom_violin(aes(x = HGVSp_Short, y = tmb, fill = HGVSp_Short )) + 
-            scale_x_discrete(breaks = c("WT", 'MT'), labels = c("Wild Type", "Mutant")) +
-            xlab(paste(geneSymbolInput(), 'status')) + ylab("tumor mutation burden") + theme(legend.position = 'na')
-    }, width = 250, height = 250)
+            geom_violin(aes(x = HGVSp_Short, y = tmb, fill = HGVSp_Short), draw_quantiles = 0.5) + 
+            annotate("text", label=p_label, x = 0.7, y = y_upper_limit * 0.9) +
+            scale_x_discrete(breaks = c("WT", 'MT'), labels = c("Wild Type", "Mutant")) + 
+            scale_y_continuous(limits = c(0, y_upper_limit)) +
+            xlab(paste(geneSymbolInput(), 'status')) + ylab("tumor mutation burden") + 
+            ggtitle(paste("Tumor mutation burden ~ mutation status of", geneSymbolInput())) +
+            theme(legend.position = 'na', 
+                  axis.text = element_text(size = 14), 
+                  axis.title = element_text(size = 14), 
+                  plot.title = element_text(size = 18))
+    }, width = 500, height = 300)
     
-    output$table2 <- DT::renderDataTable(
-        geneQueryData()
-    )
     
     output$plot2b <- renderPlot({
         if (!is.na(genePositionInput())){
+            # set upper limit to 0.9 percentile
+            y_upper_limit <- quantile(genePositionQueryData()$tmb, 0.9, na.rm = TRUE)
             ggplot(genePositionQueryData()) + 
-                geom_violin(aes(x = HGVSp_Short, y = tmb, fill = HGVSp_Short)) +
-                xlab(sprintf("%s mutation status at position %d", geneSymbolInput(), genePositionInput())) +
-                ylab("tumor mutation burden")
-        }
-    }, width = 500, height = 300)
-    
-    output$plot2c <- renderPlot({
-        if (length(other_genesInput())!=0){
-            ggplot(multiGeneQuery()) + geom_violin(aes(x = multiMutationStatus, y = tmb, fill = multiMutationStatus))
+                geom_violin(aes(x = HGVSp_Short, y = tmb, fill = HGVSp_Short), draw_quantiles = 0.5) +
+                scale_y_continuous(limits = c(0, y_upper_limit)) +
+                xlab("amino acid changes at the specified position") +
+                ylab("tumor mutation burden") + 
+                ggtitle(sprintf("%s mutation status at position %d", geneSymbolInput(), genePositionInput())) +
+                theme(legend.position = "na",
+                      axis.text = element_text(size = 14), 
+                      axis.title = element_text(size = 14), 
+                      plot.title = element_text(size = 18))
         }
     }, width = 600, height = 300)
     
-    output$table2 <- DT::renderDataTable(
-        multiGeneQuery()
+    output$plot2c <- renderPlot({
+        if (length(other_genesInput())!=0){
+            y_upper_limit <- quantile(multiGeneQuery()$tmb, 0.9, na.rm = TRUE)
+            ggplot(multiGeneQuery()) + 
+                geom_violin(aes(x = multiMutationStatus, y = tmb, fill = multiMutationStatus), draw_quantiles = 0.5) +
+                scale_y_continuous(limits = c(0, y_upper_limit)) + 
+                ggtitle(sprintf("Tumor mutation burden ~ %s mutation at p.%d", geneSymbolInput(), genePositionInput())) +
+                theme(legend.position = "na",
+                      axis.text = element_text(size = 14), 
+                      axis.title = element_text(size = 14), 
+                      plot.title = element_text(size = 18))
+        }
+    }, width = 600, height = 300)
+    
+    
+    output$p_matrix_2b <- renderTable({
+        p_test_data <- genePositionQueryData() 
+        if (!is.null(data)) {
+            p_test_data <- genePositionQueryData() %>% select(HGVSp_Short, tmb)
+            l = split(p_test_data$tmb, p_test_data$HGVSp_Short)
+            m <- p_value_matrix(l)
+            rownames(m) = 1:length(l)
+            colnames(m) = 1:length(l)
+            m
+        }
+    }, rownames = TRUE
+    )
+    
+    output$p_matrix_2c <- renderTable({
+        p_test_data <- multiGeneQuery() 
+        # if (!is.null(data)) {
+        #     p_test_data <- other_genesInput() %>% select(multiMutationStatus, tmb)
+        #     l = split(p_test_data$tmb, p_test_data$multiMutationStatus)
+        #     m <- p_value_matrix(l)
+        #     rownames(m) = 1:length(l)
+        #     colnames(m) = 1:length(l)
+        #     m
+        # }
+        matrix(rnorm(25), nrow = 5)
+    }, rownames = TRUE
     )
     
     
+    output$table2 <- DT::renderDataTable(
+        geneQueryData() %>% select(study_id, patient_id, sample_id, HGVSp_Short, tmb)
+    )
     
+    output$table2b <- DT::renderDataTable({
+        data <- genePositionQueryData() 
+        if (!is.null(data)) {
+            data %>% select(study_id, patient_id, sample_id, HGVSp_Short, tmb)
+        } 
+    }
+    )
     
+    output$table2c <- DT::renderDataTable({
+        data <- multiGeneQuery() 
+        if (!is.null(data)) {
+            data %>% select(study_id, patient_id, sample_id, multiMutationStatus, tmb)
+        }    
+        }
+    )
+
+    output$summary2 <- DT::renderDataTable(
+        geneQueryData() %>%
+            select(study_id, patient_id, sample_id, HGVSp_Short, tmb) %>%
+            group_by(HGVSp_Short) %>%
+            summarise(sample_size = n(),
+                      mean = round(mean(tmb, na.rm = T), 1),
+                      `standard error` = round(sd(tmb, na.rm = T), 1),
+                      median = round(median(tmb, na.rm = T),1))
+    )
+    
+    output$summary2b <- DT::renderDataTable({
+        data <- genePositionQueryData() 
+        if (!is.null(data)) {
+            data %>% select(study_id, patient_id, sample_id, HGVSp_Short, tmb) %>%
+                group_by(HGVSp_Short) %>%
+                summarise(sample_size = n(),
+                          mean = round(mean(tmb, na.rm = T), 1),
+                          `standard error` = round(sd(tmb, na.rm = T), 1),
+                          median = round(median(tmb, na.rm = T),1))
+        } 
+    }
+    )
+    
+    output$summary2c <- DT::renderDataTable({
+        data <- multiGeneQuery()
+        if (!is.null(data)){
+            data %>%
+                select(study_id, patient_id, sample_id, multiMutationStatus, tmb) %>%
+                group_by(multiMutationStatus) %>%
+                summarise(sample_size = n(),
+                          mean = round(mean(tmb, na.rm = T), 1),
+                          `standard error` = round(sd(tmb, na.rm = T), 1),
+                          median = round(median(tmb, na.rm = T),1))
+            }
+        }
+        
+    )
+
+  
     ##############
     #control Nav 3
     ##############

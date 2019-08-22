@@ -64,11 +64,20 @@ shinyUI(navbarPage(
                  tabsetPanel(
                      tabPanel("Plot", 
                               plotOutput("plot2"), 
-                              
                               plotOutput("plot2b"), 
-                              
-                              plotOutput('plot2c')), 
-                     tabPanel("Table", DT::dataTableOutput("table2"))
+                              uiOutput('p_matrix_2b'),
+                              plotOutput('plot2c'),
+                              uiOutput('p_matrix_2c')), 
+                     tabPanel("Summary", 
+                              DT::dataTableOutput("summary2"), 
+                              DT::dataTableOutput("summary2b"), 
+                              DT::dataTableOutput("summary2c")
+                              ),
+                     tabPanel("Table", 
+                              DT::dataTableOutput("table2"), 
+                              DT::dataTableOutput("table2b"), 
+                              DT::dataTableOutput("table2c"))
+                     
                  )
              )
              ),
