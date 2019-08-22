@@ -101,7 +101,7 @@ shinyUI(navbarPage(
                      tabPanel("Plot", plotOutput("plot3"), 
                               br(),
                               br(),
-                              h4("Pairwise Wilcox Test (p value)"),
+                              h4("Pairwise Wilcox Test"),
                               uiOutput("p_matrix_3")), 
                      tabPanel("Summary", DT::dataTableOutput("summary3")),
                      tabPanel("Table", DT::dataTableOutput("table3"))
