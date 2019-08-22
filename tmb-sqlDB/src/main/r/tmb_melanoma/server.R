@@ -26,7 +26,9 @@ shinyServer(function(input, output, session) {
     studiesSelected <- reactive({
         input$studies_1
     })
-    
+    tmbrange <- reactive({
+      input$slider1
+    })
     tmbSourceInput_1 <- reactive({
         switch (input$tmb_source_1,
                 "cBioportal summary" = patient_sample_cleaned  %>% mutate(tmb = normalised_mut_count), 
@@ -38,14 +40,32 @@ shinyServer(function(input, output, session) {
         tmbSourceInput_1() %>% filter(is.element(study_id, input$studies_1))
     })
     
-    output$studiesSelected <- renderText(
-        paste(studiesSelected(), collapse = ", ")
+    output$summary_line <- renderText(
+      paste("TMB variation across different studies on Melanoma from the cbioportal")
     )
+    
+    output$sample_size <- renderText(
+      paste("The sample sizes for the different studies are as in []:
+            bcc_unige_2016[293], cscc_dfarber_2015[29],cscc_hgsc_bcm_2014[39],desm_broad_2015[20],mel_tsam_liang_2017[38],skcm_broad[121],
+            skcm_broad_brafresist_2012[78],skcm_broad_dfarber[26],skcm_tcga[479], skcm_tcga_pan_can_atlas_2018[448],
+            skcm_ucla_2016[39],skcm_vanderbilt_mskcc_2015[66],skcm_yale[147]"
+            )
+    )
+    
+    output$matrix <- renderTable({
+      
+      M <- matrix(rep(1,9),nrow=3)
+      
+      rownames(M)<- c("a","b","c")
+      colnames(M) <- c(1,2,3)
+      
+      M
+      }, rownames = TRUE)
     
     output$plot1 <- renderPlot({
         ggplot(studiesDataInput_1()) + 
-            geom_boxplot(aes(study_id, tmb)) + 
-            scale_y_continuous(limits = c(0, 200)) +
+            geom_boxplot(aes(study_id, tmb)) + coord_cartesian(ylim = tmbrange())+
+        ggtitle("Different studies vs TMB")+
             theme(axis.text.x = element_text(angle = 90))
     })
     
@@ -85,10 +105,15 @@ shinyServer(function(input, output, session) {
         }
     })
     
+    output$summary_line2 <- renderText(
+      paste("TMB variation across the gene and aminoacid position of choice")
+    )
+    
     output$plot2 <- renderPlot({
         ggplot(geneQueryData()) + 
             geom_violin(aes(x = HGVSp_Short, y = normalised_mut_count, fill = HGVSp_Short )) +
             xlab(paste(geneSymbolInput(), 'status'))
+      
     })
     
     output$table2 <- renderTable(
@@ -131,10 +156,12 @@ shinyServer(function(input, output, session) {
     })
     
     
-    
     output$plot3 <- renderPlot({
-        ggplot(clinicalDataInput()) + geom_violin(aes_string(x = clinicalDataVar(), y = 'tmb'))
+        ggplot(clinicalDataInput()) + geom_violin(aes_string(x = clinicalDataVar(), y = 'tmb'))+
+        ggtitle("Stages of cancer vs TMB")
     })
+    
+    
     
     output$table3 <- renderTable(
         clinicalDataInput()
