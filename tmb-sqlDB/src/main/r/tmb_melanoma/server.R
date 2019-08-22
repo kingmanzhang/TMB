@@ -46,7 +46,11 @@ shinyServer(function(input, output, session) {
         ggplot(studiesDataInput_1()) + 
             geom_boxplot(aes(study_id, tmb, fill = assay)) + 
             scale_y_continuous(limits = c(0, 200)) + ylab("tumor mutation burden") +
-            theme(axis.text.x = element_text(angle = 90))
+            ggtitle('Tumor mutation burden ~ studies') +
+            theme(axis.text.x = element_text(angle = 90), 
+                  axis.text.y = element_text(size = 14), 
+                  axis.title = element_text(size = 14), 
+                  plot.title = element_text(size = 18))
     })
     
     output$table1 <- DT::renderDataTable(
@@ -70,7 +74,7 @@ shinyServer(function(input, output, session) {
         rownames(m) = 1:length(l)
         colnames(m) = 1:length(l)
         m
-    }, rownames = TRUE
+    }, rownames = TRUE, caption = "*, p < 0.05; **, p < 0.01, ***, p < 0.001"
     )
     
     ##############
@@ -192,17 +196,21 @@ shinyServer(function(input, output, session) {
                       axis.title = element_text(size = 14), 
                       plot.title = element_text(size = 18))
         }
-    }, width = 600, height = 300)
+    }, width = 600, height = 400)
     
     output$plot2c <- renderPlot({
         if (length(other_genesInput())!=0){
             y_upper_limit <- quantile(multiGeneQuery()$tmb, 0.9, na.rm = TRUE)
+            xlabes = unique(multiGeneQuery()$multiMutationStatus)
+            xlabel_new = str_replace_all(xlabes, '/', "/\n")
+            plot_title = str_c(c(geneSymbolInput(), other_genesInput()), collapse = ", ")
             ggplot(multiGeneQuery()) + 
                 geom_violin(aes(x = multiMutationStatus, y = tmb, fill = multiMutationStatus), draw_quantiles = 0.5) +
-                scale_y_continuous(limits = c(0, y_upper_limit)) + 
-                ggtitle(sprintf("Tumor mutation burden ~ %s mutation at p.%d", geneSymbolInput(), genePositionInput())) +
+              scale_x_discrete(breaks = xlabes, labels=xlabel_new)  + 
+              scale_y_continuous(limits = c(0, y_upper_limit)) + 
+                ggtitle(sprintf("Tumor mutation burden ~ concurrent mutations of %s", plot_title)) +
                 theme(legend.position = "na",
-                      axis.text = element_text(size = 14, angle = 90), 
+                      axis.text = element_text(size = 14, angle = 0), 
                       axis.title = element_text(size = 14), 
                       plot.title = element_text(size = 18))
         }
@@ -220,7 +228,7 @@ shinyServer(function(input, output, session) {
             colnames(m) = lnames
             m
         } 
-    }, rownames = TRUE
+    }, rownames = TRUE, caption = "*, p < 0.05; **, p < 0.01, ***, p < 0.001"
     )
     
     output$p_matrix_2c <- renderTable({
@@ -234,7 +242,7 @@ shinyServer(function(input, output, session) {
             colnames(m) = lnames
             m
         } 
-    }, rownames = TRUE
+    }, rownames = TRUE, caption = "*, p < 0.05; **, p < 0.01, ***, p < 0.001"
     )
     
     
@@ -314,7 +322,7 @@ shinyServer(function(input, output, session) {
     clinicalDataVar <- reactive({
         switch (input$`clinical variable`,
                 "tumor stage" = "stage_at.presentation", 
-                "tumor type" = "cancer_type"
+                "tumor type" = "oncotree_code"
         )
     })
     
@@ -323,11 +331,17 @@ shinyServer(function(input, output, session) {
     })
     
     output$plot3 <- renderPlot({
+        y_upper_limit <- quantile(clinicalDataInput()$tmb, 0.9, na.rm = TRUE)
+        plottitle <- paste("Tumor mutation burden ~", clinicalDataVar())
         ggplot(clinicalDataInput()) + 
             geom_violin(aes_string(x = clinicalDataVar(), y = 'tmb', fill = clinicalDataVar()), draw_quantiles=0.5) + 
-            scale_y_continuous(limits = c(0,200)) +
+            scale_y_continuous(limits = c(0,y_upper_limit)) +
             ylab("tumor mutation burden") + 
-            theme(legend.position = "na")
+          ggtitle(plottitle) +
+            theme(legend.position = "na", 
+                  axis.text = element_text(size = 14), 
+                  axis.title = element_text(size = 14), 
+                  plot.title = element_text(size = 18))
     })
     
     output$table3 <- DT::renderDataTable(
@@ -342,7 +356,7 @@ shinyServer(function(input, output, session) {
         rownames(m) = names
         colnames(m) = names
         m
-    }, rownames = TRUE
+    }, rownames = TRUE, caption = "*, p < 0.05; **, p < 0.01, ***, p < 0.001"
     )
     
     output$summary3 <- DT::renderDataTable({

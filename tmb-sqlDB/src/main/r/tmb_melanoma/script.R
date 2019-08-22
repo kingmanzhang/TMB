@@ -198,11 +198,11 @@ p_value_matrix <- function(list, test='wilcox.test'){
                      error = function(e) {p <<- 1})
             if (is.na(p)){
                 symbol = ' '
-            } else if (p < 0.05) {
-                symbol = '*'
+            } else if (p < 0.001) {
+                symbol = '***'
             } else if (p < 0.01){
                 symbol = '**'
-            } else if (p < 0.001){
+            } else if (p < 0.05){
                 symbol = '*'
             } else {
                 symbol = ' '
@@ -212,3 +212,4 @@ p_value_matrix <- function(list, test='wilcox.test'){
     }
     return (m)
 }
+

@@ -35,7 +35,7 @@ shinyUI(navbarPage(
                               p('\n\n'),
                               br(),
                               br(),
-                              h4("Pairwise Wilcox Test (p value)"),
+                              h4("Pairwise Wilcox Test"),
                               uiOutput("p_matrix_1")
                               ), 
                      tabPanel("Summary", h4('Summary Statistics for Selected Studies'),
@@ -56,7 +56,7 @@ shinyUI(navbarPage(
                            ""),
                  textInput('other_gene', 'Simutaneously Mutated Genes', ''),
                  checkboxGroupInput("studies_2", "Studies",
-                                    unique(patient_sample_cleaned$study_id), 
+                                    sort(unique(patient_sample_cleaned$study_id)), 
                                     selected = unique(patient_sample_cleaned$study_id))
              ),
              
@@ -64,9 +64,11 @@ shinyUI(navbarPage(
                  tabsetPanel(
                      tabPanel("Plot", 
                               plotOutput("plot2"), 
-                              plotOutput("plot2b"), 
+                              plotOutput("plot2b"),
+                              h4("Pairwise Wilcox Test"),
                               uiOutput('p_matrix_2b'),
                               plotOutput('plot2c'),
+                              h4("Pairwise Wilcox Test"),
                               uiOutput('p_matrix_2c')), 
                      tabPanel("Summary", 
                               DT::dataTableOutput("summary2"), 
@@ -90,7 +92,7 @@ shinyUI(navbarPage(
                              c("tumor stage", "tumor type"),
                              selected = "tumor stage"),
                  checkboxGroupInput("studies_3", "Studies",
-                                    unique(patient_sample_cleaned$study_id), 
+                                    sort(unique(patient_sample_cleaned$study_id)), 
                                     selected = unique(patient_sample_cleaned$study_id))
              ),
              
