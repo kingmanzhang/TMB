@@ -81,15 +81,6 @@ query_samples_with_multiple_genes_within_studies <- function(genes, studies, dbc
     dbGetQuery(dbcon, query)
 }
 
-data_for_plot <- patient_sample_cleaned %>% 
-    select(study_id, patient_id, sample_id, normalised_mut_count, normalised_mut_count_non_silent) %>% 
-    left_join(
-        target_samples %>% 
-            rename(study_id = Study_Id, sample_id = Tumor_Sample_Barcode),
-        by = c('study_id', 'sample_id')
-    ) %>% 
-    mutate(multiMutationStatus = if_else(is.na(multiMutationStatus), 'WT', multiMutationStatus))
-
 tmb_vs_single_gene <- function(gene_symbol, dbcon, patient_sample_cleaned){
     query <-  sprintf("
           SELECT 
