@@ -196,8 +196,9 @@ p_value_matrix <- function(list, test='wilcox.test'){
             p <- 1
             tryCatch({p <- wilcox.test(list[[i]], list[[j]])$p.value}, 
                      error = function(e) {p <<- 1})
-            
-            if (p < 0.05) {
+            if (is.na(p)){
+                symbol = ' '
+            } else if (p < 0.05) {
                 symbol = '*'
             } else if (p < 0.01){
                 symbol = '**'

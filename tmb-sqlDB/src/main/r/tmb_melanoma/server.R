@@ -210,29 +210,30 @@ shinyServer(function(input, output, session) {
     
     
     output$p_matrix_2b <- renderTable({
-        p_test_data <- genePositionQueryData() 
+        data <- genePositionQueryData() 
         if (!is.null(data)) {
-            p_test_data <- genePositionQueryData() %>% select(HGVSp_Short, tmb)
+            p_test_data <- data %>% select(study_id, patient_id, sample_id, HGVSp_Short, tmb)
             l = split(p_test_data$tmb, p_test_data$HGVSp_Short)
             m <- p_value_matrix(l)
-            rownames(m) = 1:length(l)
-            colnames(m) = 1:length(l)
+            lnames <- names(l)
+            rownames(m) = lnames
+            colnames(m) = lnames
             m
-        }
+        } 
     }, rownames = TRUE
     )
     
     output$p_matrix_2c <- renderTable({
-        p_test_data <- multiGeneQuery() 
-        # if (!is.null(data)) {
-        #     p_test_data <- other_genesInput() %>% select(multiMutationStatus, tmb)
-        #     l = split(p_test_data$tmb, p_test_data$multiMutationStatus)
-        #     m <- p_value_matrix(l)
-        #     rownames(m) = 1:length(l)
-        #     colnames(m) = 1:length(l)
-        #     m
-        # }
-        matrix(rnorm(25), nrow = 5)
+        data <- multiGeneQuery() 
+        if (!is.null(data)) {
+            p_test_data <- data %>% select(study_id, patient_id, sample_id, multiMutationStatus, tmb)
+            l = split(p_test_data$tmb, p_test_data$multiMutationStatus)
+            m <- p_value_matrix(l)
+            lnames <- names(l)
+            rownames(m) = lnames
+            colnames(m) = lnames
+            m
+        } 
     }, rownames = TRUE
     )
     
@@ -342,6 +343,19 @@ shinyServer(function(input, output, session) {
         colnames(m) = names
         m
     }, rownames = TRUE
+    )
+    
+    output$summary3 <- DT::renderDataTable({
+        data <- clinicalDataInput()
+        if (!is.null(data)){
+            data %>% select(study_id, sample_id, clinicalDataVar(), tmb) %>% 
+                group_by_at(vars(clinicalDataVar())) %>%
+                summarise(sample_size = n(),
+                          mean = round(mean(tmb, na.rm = T), 1),
+                          `standard error` = round(sd(tmb, na.rm = T), 1),
+                          median = round(median(tmb, na.rm = T),1))
+        }
+    }
     )
 
 })
