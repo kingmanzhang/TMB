@@ -208,6 +208,8 @@ shinyServer(function(input, output, session) {
                 geom_violin(aes(x = multiMutationStatus, y = tmb, fill = multiMutationStatus), draw_quantiles = 0.5) +
               scale_x_discrete(breaks = xlabes, labels=xlabel_new)  + 
               scale_y_continuous(limits = c(0, y_upper_limit)) + 
+              xlab("mutation status") +
+              ylab("Tumor mutation burden") +
                 ggtitle(sprintf("Tumor mutation burden ~ concurrent mutations of %s", plot_title)) +
                 theme(legend.position = "na",
                       axis.text = element_text(size = 14, angle = 0), 
@@ -310,8 +312,10 @@ shinyServer(function(input, output, session) {
     ##############
     tmbSourceInput_3 <- reactive({
         switch (input$tmb_source_3,
-                "cBioportal summary" = patient_sample_cleaned  %>% mutate(tmb = normalised_mut_count), 
-                "non-silent (Hack 1)" = patient_sample_cleaned %>% mutate(tmb = normalised_mut_count_non_silent)
+                "cBioportal summary" = patient_sample_cleaned  %>% mutate(tmb = normalised_mut_count) %>% 
+                  filter(!is.na(stage_at.presentation) & stage_at.presentation != '0'), 
+                "non-silent (Hack 1)" = patient_sample_cleaned %>% mutate(tmb = normalised_mut_count_non_silent) %>% 
+                  filter(!is.na(stage_at.presentation) & stage_at.presentation != '0')
         )
     })
     
