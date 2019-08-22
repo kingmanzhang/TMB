@@ -165,7 +165,7 @@ shinyServer(function(input, output, session) {
         y_upper_limit <- quantile(data$tmb, 0.9, na.rm = TRUE)
         ggplot(data) + 
             geom_violin(aes(x = HGVSp_Short, y = tmb, fill = HGVSp_Short), draw_quantiles = 0.5) + 
-            annotate("text", label=p_label, x = 0.7, y = y_upper_limit * 0.9) +
+            annotate("text", label=p_label, x = 1.45, y = y_upper_limit * 0.85, size = 6) +
             scale_x_discrete(breaks = c("WT", 'MT'), labels = c("Wild Type", "Mutant")) + 
             scale_y_continuous(limits = c(0, y_upper_limit)) +
             xlab(paste(geneSymbolInput(), 'status')) + ylab("tumor mutation burden") + 
@@ -202,11 +202,11 @@ shinyServer(function(input, output, session) {
                 scale_y_continuous(limits = c(0, y_upper_limit)) + 
                 ggtitle(sprintf("Tumor mutation burden ~ %s mutation at p.%d", geneSymbolInput(), genePositionInput())) +
                 theme(legend.position = "na",
-                      axis.text = element_text(size = 14), 
+                      axis.text = element_text(size = 14, angle = 90), 
                       axis.title = element_text(size = 14), 
                       plot.title = element_text(size = 18))
         }
-    }, width = 600, height = 300)
+    }, width = 600, height = 400)
     
     
     output$p_matrix_2b <- renderTable({

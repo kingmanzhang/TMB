@@ -21,7 +21,7 @@ shinyUI(navbarPage(
                              c("cBioportal summary", "non-silent (Hack 1)"),
                              selected = "cBioportal summary"),
                  checkboxGroupInput("studies_1", "Studies",
-                                unique(patient_sample_cleaned$study_id), 
+                                sort(unique(patient_sample_cleaned$study_id)), 
                                 selected = unique(patient_sample_cleaned$study_id))
              ),
              

@@ -128,3 +128,5 @@ ggplot(data_for_plot) +
 query = "SELECT Study_Id, Tumor_Sample_Barcode, count(*) as N FROM   (SELECT DISTINCT Study_Id, Tumor_Sample_Barcode, Hugo_Symbol, HGVSp_Short FROM mutations) as temp GROUP BY Study_Id, Tumor_Sample_Barcode ORDER BY Study_Id, Tumor_Sample_Barcode"
 dbGetQuery(dbcon, query)
 
+ggplot(patient_sample_cleaned) + geom_violin(aes(x = study_id, y = normalised_mut_count)) + 
+    geom_label(x = 10, y = 200, label = 'hello')
