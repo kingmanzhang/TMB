@@ -132,12 +132,7 @@ shinyServer(function(input, output, session) {
     })
     
     other_genesInput <- reactive({
-        input_string = input$other_gene
-        if (input_string != '(maximum 2)'){
-            strsplit(input_string, ',[ ]?| ')[[1]]
-        } else {
-            character()
-        }
+        strsplit(input$other_gene, ',[ ]?| ')[[1]]
     })
     
     multiGeneQuery <- reactive({
@@ -164,7 +159,7 @@ shinyServer(function(input, output, session) {
             geom_violin(aes(x = HGVSp_Short, y = tmb, fill = HGVSp_Short )) + 
             scale_x_discrete(breaks = c("WT", 'MT'), labels = c("Wild Type", "Mutant")) +
             xlab(paste(geneSymbolInput(), 'status')) + ylab("tumor mutation burden") + theme(legend.position = 'na')
-    })
+    }, width = 250, height = 250)
     
     output$table2 <- DT::renderDataTable(
         geneQueryData()
@@ -177,13 +172,13 @@ shinyServer(function(input, output, session) {
                 xlab(sprintf("%s mutation status at position %d", geneSymbolInput(), genePositionInput())) +
                 ylab("tumor mutation burden")
         }
-    })
+    }, width = 500, height = 300)
     
     output$plot2c <- renderPlot({
         if (length(other_genesInput())!=0){
             ggplot(multiGeneQuery()) + geom_violin(aes(x = multiMutationStatus, y = tmb, fill = multiMutationStatus))
         }
-    })
+    }, width = 600, height = 300)
     
     output$table2 <- DT::renderDataTable(
         multiGeneQuery()

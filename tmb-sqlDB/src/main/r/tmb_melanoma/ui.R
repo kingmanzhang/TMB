@@ -54,7 +54,7 @@ shinyUI(navbarPage(
                              "BRAF"), 
                  textInput("position", "Amino acid position", 
                            ""),
-                 textInput('other_gene', 'Simutaneously Mutated Genes', '(maximum 2)'),
+                 textInput('other_gene', 'Simutaneously Mutated Genes', ''),
                  checkboxGroupInput("studies_2", "Studies",
                                     unique(patient_sample_cleaned$study_id), 
                                     selected = unique(patient_sample_cleaned$study_id))
@@ -64,11 +64,9 @@ shinyUI(navbarPage(
                  tabsetPanel(
                      tabPanel("Plot", 
                               plotOutput("plot2"), 
-                              br(),
-                              br(),
+                              
                               plotOutput("plot2b"), 
-                              br(),
-                              br(),
+                              
                               plotOutput('plot2c')), 
                      tabPanel("Table", DT::dataTableOutput("table2"))
                  )
