@@ -1,0 +1,112 @@
+#
+# This is the user-interface definition of a Shiny web application. You can
+# run the application by clicking 'Run App' above.
+#
+# Find out more about building applications with Shiny here:
+#
+#    http://shiny.rstudio.com/
+#
+
+library(shiny)
+library(DT)
+
+
+# Define UI for application that draws a histogram
+shinyUI(navbarPage(
+    "Tumor Mutation Burden Viewer",
+    tabPanel("Study", 
+             sidebarPanel(
+                 # Inputs excluded for brevity
+                 selectInput("tmb_source_1", "TMB Source", 
+                             c("cBioportal summary", "non-silent (Hack 1)"),
+                             selected = "cBioportal summary"),
+                 checkboxGroupInput("studies_1", "Studies",
+                                sort(unique(patient_sample_cleaned$study_id)), 
+                                selected = unique(patient_sample_cleaned$study_id))
+             ),
+             
+             mainPanel(
+                 tabsetPanel(
+                     tabPanel("Plot", 
+                              plotOutput("plot1"),
+                              p('\n\n'),
+                              #p("selected studies: "),
+                              #textOutput('studiesSelected'), 
+                              p('\n\n'),
+                              br(),
+                              br(),
+                              h4("Pairwise Wilcox Test"),
+                              uiOutput("p_matrix_1")
+                              ), 
+                     tabPanel("Summary", h4('Summary Statistics for Selected Studies'),
+                              DT::dataTableOutput('summary1')),
+                     tabPanel("Table", DT::dataTableOutput("table1"))
+                 )
+             )
+             ),
+    tabPanel("Gene", 
+             sidebarPanel(
+                 # Inputs excluded for brevity
+                 selectInput("tmb_source_2", "TMB Source", 
+                             c("cBioportal summary", "non-silent (Hack 1)"),
+                             selected = "cBioportal summary"),
+                 textInput("gene", "Gene symbol", 
+                             "BRAF"), 
+                 textInput("position", "Amino acid position", 
+                           ""),
+                 textInput('other_gene', 'Simutaneously Mutated Genes', ''),
+                 checkboxGroupInput("studies_2", "Studies",
+                                    sort(unique(patient_sample_cleaned$study_id)), 
+                                    selected = unique(patient_sample_cleaned$study_id))
+             ),
+             
+             mainPanel(
+                 tabsetPanel(
+                     tabPanel("Plot", 
+                              plotOutput("plot2"), 
+                              plotOutput("plot2b"),
+                              h4("Pairwise Wilcox Test"),
+                              uiOutput('p_matrix_2b'),
+                              plotOutput('plot2c'),
+                              h4("Pairwise Wilcox Test"),
+                              uiOutput('p_matrix_2c')), 
+                     tabPanel("Summary", 
+                              DT::dataTableOutput("summary2"), 
+                              DT::dataTableOutput("summary2b"), 
+                              DT::dataTableOutput("summary2c")
+                              ),
+                     tabPanel("Table", 
+                              DT::dataTableOutput("table2"), 
+                              DT::dataTableOutput("table2b"), 
+                              DT::dataTableOutput("table2c"))
+                     
+                 )
+             )
+             ),
+    tabPanel("Clinical", 
+             sidebarPanel(
+                 selectInput("tmb_source_3", "TMB Source", 
+                             c("cBioportal summary", "non-silent (Hack 1)"),
+                             selected = "cBioportal summary"),
+                 selectInput("clinical variable", "Clinical variable", 
+                             c("tumor stage", "tumor type"),
+                             selected = "tumor stage"),
+                 checkboxGroupInput("studies_3", "Studies",
+                                    sort(unique(patient_sample_cleaned$study_id)), 
+                                    selected = unique(patient_sample_cleaned$study_id))
+             ),
+             
+             mainPanel(
+                 tabsetPanel(
+                     tabPanel("Plot", plotOutput("plot3"), 
+                              br(),
+                              br(),
+                              h4("Pairwise Wilcox Test"),
+                              uiOutput("p_matrix_3")), 
+                     tabPanel("Summary", DT::dataTableOutput("summary3")),
+                     tabPanel("Table", DT::dataTableOutput("table3"))
+                 )
+             )
+             )
+)
+)

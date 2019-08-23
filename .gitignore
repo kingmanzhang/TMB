@@ -1,3 +1,8 @@
+tmb-sqlDB/src/main/r/tmb_melanoma/rsconnect/*
+*.Rhistory
+#do not track database for now
+*.sqlite
+
 #java stuff
 *.idea/
 *.iml
