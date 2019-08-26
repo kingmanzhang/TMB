@@ -1,5 +1,6 @@
 tmb-sqlDB/src/main/r/tmb_melanoma/rsconnect/*
 *.Rhistory
+*.DS_Store
 #do not track database for now
 *.sqlite
 
