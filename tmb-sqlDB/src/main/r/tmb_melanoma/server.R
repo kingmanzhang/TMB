@@ -17,6 +17,8 @@ source("script.R")
 db_url <- "tmb.sqlite"
 dbcon <- dbConnect(RSQLite::SQLite(), db_url)
 
+options(warn = -1)
+
 # Define server logic required to draw a histogram
 shinyServer(function(input, output, session) {
     
@@ -95,7 +97,10 @@ shinyServer(function(input, output, session) {
         tmbSourceInput_2() %>% filter(is.element(study_id, input$studies_2))
     })
     
-    geneSymbolInput <- reactive({input$gene})
+    geneSymbolInput <- reactive({
+      inputSymbols = input$gene
+      message(paste("user quered gene: ", inputSymbols))
+      return (inputSymbols)})
     
     geneQueryData <- reactive({
         if (length(studiesSelected2()) == 0){
@@ -117,7 +122,9 @@ shinyServer(function(input, output, session) {
     })
     
     genePositionInput <- reactive({
-        as.integer(input$position)
+        position = as.integer(input$position)
+        message(paste("position: ", position))
+        return (position)
     })
     
     genePositionQueryData <- reactive({
@@ -136,7 +143,9 @@ shinyServer(function(input, output, session) {
     })
     
     other_genesInput <- reactive({
-        strsplit(input$other_gene, ',[ ]?| ')[[1]]
+        other_genes = strsplit(input$other_gene, ',[ ]?| ')[[1]]
+        message(str_c(c("concurrent genes:", other_genes), collapse = " "))
+        return (other_genes)
     })
     
     multiGeneQuery <- reactive({

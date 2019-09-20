@@ -194,7 +194,7 @@ p_value_matrix <- function(list, test='wilcox.test'){
         for (j in 1:N){
             symbol = ' '
             p <- 1
-            tryCatch({p <- wilcox.test(list[[i]], list[[j]])$p.value}, 
+            tryCatch({p <- suppressWarnings(wilcox.test(list[[i]], list[[j]])$p.value)}, 
                      error = function(e) {p <<- 1})
             if (is.na(p)){
                 symbol = ' '
